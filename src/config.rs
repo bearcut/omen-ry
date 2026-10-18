@@ -39,7 +39,7 @@ impl Default for WaveConfig {
     }
 }
 
-fn default_fps() -> u32 { 30 }
+fn default_fps() -> u32 { 4 }
 fn default_brightness() -> u8 { 100 }
 fn default_mode() -> String { "wave".to_string() }
 fn default_palette() -> String { "cyberpunk".to_string() }

@@ -1,8 +1,8 @@
 # omen-ry: Configuration for HP OMEN 4-Zone RGB Daemon
 
 [daemon]
-# Target framerate for active animations (15-60 FPS)
-fps = 30
+# Target framerate for active animations (4-8 FPS recommended for ACPI hardware)
+fps = 4
 
 # Initial keyboard brightness on boot (0-100)
 default_brightness = 100

@@ -1,6 +1,5 @@
 use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, oneshot};
-use tokio::time::MissedTickBehavior;
 use tracing::info;
 use crate::ipc::protocol::{IpcRequest, IpcResponse};
 use super::Engine;
@@ -10,8 +9,9 @@ pub async fn run_event_loop(
     mut ipc_rx: mpsc::Receiver<(IpcRequest, oneshot::Sender<IpcResponse>)>,
 ) -> std::io::Result<()> {
     let frame_duration = Duration::from_micros((1_000_000.0 / engine.fps() as f64) as u64);
-    let mut interval = tokio::time::interval(frame_duration);
-    interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+    let mut next_tick = tokio::time::Instant::now() + frame_duration;
+    let sleep_timer = tokio::time::sleep_until(next_tick);
+    tokio::pin!(sleep_timer);
 
     let mut last_tick = Instant::now();
 
@@ -31,7 +31,7 @@ pub async fn run_event_loop(
             // Adaptive timer tick: ONLY ACTIVE WHEN ANIMATION IS RUNNING!
             // When is_animating == false, this branch is completely disabled.
             // Result: 0.0% CPU usage while idle/static.
-            _ = interval.tick(), if is_animating => {
+            _ = &mut sleep_timer, if is_animating => {
                 let now = Instant::now();
                 let dt = now.duration_since(last_tick);
                 last_tick = now;
@@ -39,6 +39,10 @@ pub async fn run_event_loop(
                 if let Err(e) = engine.render_frame(dt) {
                     tracing::error!("Failed to render animation frame: {}", e);
                 }
+
+                // Guarantee inter-frame sleep so ACPI bus is never saturated
+                next_tick = tokio::time::Instant::now() + frame_duration;
+                sleep_timer.as_mut().reset(next_tick);
             }
 
             // IPC Request from CLI client
@@ -55,6 +59,11 @@ pub async fn run_event_loop(
                 // If mode changed to static or dynamic, update frame immediately
                 last_tick = Instant::now();
                 let _ = engine.render_frame(Duration::from_millis(0));
+
+                if engine.is_animating() {
+                    next_tick = tokio::time::Instant::now() + frame_duration;
+                    sleep_timer.as_mut().reset(next_tick);
+                }
             }
 
             // OS Termination signal (Ctrl+C / SIGTERM)
