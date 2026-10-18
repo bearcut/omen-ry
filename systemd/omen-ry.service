@@ -1,0 +1,19 @@
+[Unit]
+Description=HP OMEN 4-Zone RGB Keyboard Animation Daemon
+Documentation=https://github.com/bearcut/omen-ry
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/omen-ry daemon
+Restart=on-failure
+RestartSec=3s
+KillMode=mixed
+
+# Sandboxing and security
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%t %h/.config/omen-ry
+
+[Install]
+WantedBy=default.target

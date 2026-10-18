@@ -1,0 +1,21 @@
+# omen-ry: Configuration for HP OMEN 4-Zone RGB Daemon
+
+[daemon]
+# Target framerate for active animations (15-60 FPS)
+fps = 30
+
+# Initial keyboard brightness on boot (0-100)
+default_brightness = 100
+
+# Initial mode on startup ("wave" or "static")
+default_mode = "wave"
+
+[wave]
+# Built-in palettes: "cyberpunk", "rainbow", "sunset", "matrix", "ocean", "fire"
+palette = "cyberpunk"
+
+# Wave cycle speed (cycles per second)
+speed = 0.5
+
+# Flow direction (false: left-to-right, true: right-to-left)
+reverse = false
